@@ -183,16 +183,20 @@ class ClientController extends Controller {
     }
 
     public function sendPasswordResetEmail(Request $request){
-        // If email does not exist
+
         if(!$this->validEmail($request->email)) {
             return response()->json([
-                'message' => 'Email does not exist.'
+                "status" => "error", 
+                'code' => 400,
+                'message' => 'El correo electrónico no existe.'
             ], Response::HTTP_NOT_FOUND);
         } else {
-            // If email exists
+          
             $this->sendMail($request->email);
             return response()->json([
-                'message' => 'Check your inbox, we have sent a link to reset email.'
+                "status" => "success", 
+                'code' => 200,
+                'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'
             ], Response::HTTP_OK);            
         }
     }
@@ -242,7 +246,9 @@ class ClientController extends Controller {
       // Token not found response
       private function tokenNotFoundError() {
           return response()->json([
-            'error' => 'Either your email or token is wrong.'
+            "status" => "error", 
+            'code' => 400,
+            'message' => 'Su correo electrónico o token es incorrecto.'
           ],Response::HTTP_UNPROCESSABLE_ENTITY);
       }
   
@@ -259,13 +265,15 @@ class ClientController extends Controller {
   
           // reset password response
           return response()->json([
-            'data'=>'Password has been updated.'
+            "status" => "success", 
+            'code' => 200,
+            'message'=>'Se actualizó la contraseña.'
           ],Response::HTTP_CREATED);
       }
 
       public function verify($client_id, Request $request) {
         if (!$request->hasValidSignature()) {
-            return response()->json(["message" => "Invalid/Expired url provided."], 401);
+            return response()->json(["message" => "Se ha proporcionado una URL no válida o caducada."], 401);
         }
     
         $user = Client::findOrFail($client_id);
@@ -273,8 +281,7 @@ class ClientController extends Controller {
         if (!$user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
-    
-        
+       
         return response()->json([
             "status" => "success", 
             'code' => 200,
@@ -284,12 +291,12 @@ class ClientController extends Controller {
     
     public function resend() {
         if (auth()->user()->hasVerifiedEmail()) {
-            return response()->json(["message" => "Email already verified."], 400);
+            return response()->json(["message" => "Correo electrónico ya verificado."], 400);
         }
     
         auth()->user()->sendEmailVerificationNotification();
     
-        return response()->json(["message" => "Email verification link sent on your email id"]);
+        return response()->json(["message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"]);
     }
 
 
