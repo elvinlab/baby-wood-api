@@ -5,6 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Mail\SendMail;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
+use App\Http\Requests\UpdatePasswordRequest;
 use Auth;
 
 class ClientController extends Controller {
@@ -156,6 +163,88 @@ class ClientController extends Controller {
             ]);
         }
     }
+
+    public function sendPasswordResetEmail(Request $request){
+        // If email does not exist
+        if(!$this->validEmail($request->email)) {
+            return response()->json([
+                'message' => 'Email does not exist.'
+            ], Response::HTTP_NOT_FOUND);
+        } else {
+            // If email exists
+            $this->sendMail($request->email);
+            return response()->json([
+                'message' => 'Check your inbox, we have sent a link to reset email.'
+            ], Response::HTTP_OK);            
+        }
+    }
+
+    public function sendMail($email){
+        $token = $this->generateToken($email);
+        Mail::to($email)->send(new SendMail($token));
+    }
+
+    public function validEmail($email) {
+       return !!Client::where('email', $email)->first();
+    }
+
+    public function generateToken($email){
+      $isOtherToken = DB::table('password_resets')->where('email', $email)->first();
+
+      if($isOtherToken) {
+        return $isOtherToken->token;
+      }
+
+      $token = Str::random(80);;
+      $this->storeToken($token, $email);
+      return $token;
+    }
+
+    public function storeToken($token, $email){
+        DB::table('password_resets')->insert([
+            'email' => $email,
+            'token' => $token,
+            'created_at' => Carbon::now()            
+        ]);
+    }
+
+    public function passwordResetProcess(UpdatePasswordRequest $request){
+        
+        return $this->updatePasswordRow($request)->count() > 0 ? $this->resetPassword($request) : $this->tokenNotFoundError();
+      }
+  
+      // Verify if token is valid
+      private function updatePasswordRow($request){
+         return DB::table('password_resets')->where([
+             'email' => $request->email,
+             'token' => $request->passwordToken
+         ]);
+      }
+  
+      // Token not found response
+      private function tokenNotFoundError() {
+          return response()->json([
+            'error' => 'Either your email or token is wrong.'
+          ],Response::HTTP_UNPROCESSABLE_ENTITY);
+      }
+  
+      // Reset password
+      private function resetPassword($request) {
+          // find email
+          $userData = Client::whereEmail($request->email)->first();
+          // update password
+          $userData->update([
+            'password'=>bcrypt($request->password)
+          ]);
+          // remove verification data from db
+          $this->updatePasswordRow($request)->delete();
+  
+          // reset password response
+          return response()->json([
+            'data'=>'Password has been updated.'
+          ],Response::HTTP_CREATED);
+      }
+
 
     public function clientInfo() {
  

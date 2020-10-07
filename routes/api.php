@@ -49,7 +49,9 @@ Route::group(['prefix' => 'store'],function(){
 
         Route::post('register', [ClientController::class, 'register']);
         Route::post('login', [ ClientController::class, 'login']);   
-    
+        Route::post('reset-password-request', [ClientController::class, 'sendPasswordResetEmail']);
+        Route::post('change-password', [ClientController::class, 'passwordResetProcess']);
+        
             Route::group( ['middleware' => ['auth:client']], function(){
             
                 Route::get('logout', [ClientController::class, 'logout']);
