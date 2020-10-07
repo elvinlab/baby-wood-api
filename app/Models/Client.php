@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Uuid;
 
-class Client extends Authenticatable  {
+class Client extends Authenticatable {
     
     use HasFactory, Notifiable, HasApiTokens;
     
@@ -53,6 +53,7 @@ class Client extends Authenticatable  {
         self::creating(function ($model) {
             $model->id = (string) Uuid::generate(4);
             $model->role = 'ROLE_CLIENT';   
+            $model->sendEmailVerificationNotification();
         });
     }
 }

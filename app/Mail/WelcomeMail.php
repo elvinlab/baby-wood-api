@@ -7,19 +7,19 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class SendMail extends Mailable
+class WelcomeMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $token;
+    public $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($token)
+    public function __construct($data)
     {
-        $this->token = $token;
+        $this->data = $data;
     }
 
     /**
@@ -27,11 +27,9 @@ class SendMail extends Mailable
      *
      * @return $this
      */
-    public function build(){
-
-        $subject = 'Baby Wood: Restablecer la contraseña';
-        return $this->markdown('Email.resetPassword')->with([
-            'token' => $this->token
-        ])->subject($subject);;        
+    public function build()
+    {
+        $subject = 'Bienvenido a la familia Baby Wood';
+       return $this->view('Email.welcome')->subject($subject);
     }
 }

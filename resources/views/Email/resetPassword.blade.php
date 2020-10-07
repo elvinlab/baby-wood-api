@@ -1,12 +1,12 @@
 @component('mail::message')
-# Reset Password
+# Baby Wood: Restablecer contraseña
 
-Reset or change your password.
+Restablezca o cambie su contraseña.
 
 @component('mail::button', ['url' => 'http://localhost:4200/cambiar-password?token='.$token])
-Change Password
+Cambiar contraseña
 @endcomponent
 
-Thanks,<br>
+Gracias,<br>
 {{ config('app.name') }}
 @endcomponent

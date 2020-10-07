@@ -51,7 +51,9 @@ Route::group(['prefix' => 'store'],function(){
         Route::post('login', [ ClientController::class, 'login']);   
         Route::post('reset-password-request', [ClientController::class, 'sendPasswordResetEmail']);
         Route::post('change-password', [ClientController::class, 'passwordResetProcess']);
-        
+        Route::get('email/verify/{id}', [ClientController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
+        Route::get('email/resend', [ClientController::class, 'resend'])->name('verification.resend');
+
             Route::group( ['middleware' => ['auth:client']], function(){
             
                 Route::get('logout', [ClientController::class, 'logout']);

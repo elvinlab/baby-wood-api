@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\UpdatePasswordRequest;
+use App\Mail\WelcomeMail;
 use Auth;
 
 class ClientController extends Controller {
@@ -49,6 +50,8 @@ class ClientController extends Controller {
                 $client->email    = $parameters_array['email'];
                 $client->password = bcrypt($parameters_array['password']);          
                 $client->save(); 
+
+                Mail::to($client->email )->send(new WelcomeMail($client));
 
                 $data = array( 
                     'status'  => 'success',
@@ -121,7 +124,22 @@ class ClientController extends Controller {
             return response()->json($data, $data['code']);
         }
         
+    
+
+
         $client = Client::where('email', $params_object->email)->first();
+
+        $user = Client::findOrFail($client->id);
+    
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+
+            return response( array( 
+                "status" => "error", 
+                'code' => 400,
+                "message" => "Email no verificado, revisar corrreo" ) );
+        }
+
 
         if(password_verify($params_object->password, $client->password)){
            
@@ -244,6 +262,35 @@ class ClientController extends Controller {
             'data'=>'Password has been updated.'
           ],Response::HTTP_CREATED);
       }
+
+      public function verify($client_id, Request $request) {
+        if (!$request->hasValidSignature()) {
+            return response()->json(["message" => "Invalid/Expired url provided."], 401);
+        }
+    
+        $user = Client::findOrFail($client_id);
+    
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+    
+        
+        return response()->json([
+            "status" => "success", 
+            'code' => 200,
+            'message' => 'Cuenta verificada exitosamente'
+        ]);
+    }
+    
+    public function resend() {
+        if (auth()->user()->hasVerifiedEmail()) {
+            return response()->json(["message" => "Email already verified."], 400);
+        }
+    
+        auth()->user()->sendEmailVerificationNotification();
+    
+        return response()->json(["message" => "Email verification link sent on your email id"]);
+    }
 
 
     public function clientInfo() {
