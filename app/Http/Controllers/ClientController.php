@@ -51,7 +51,7 @@ class ClientController extends Controller {
                 $client->password = bcrypt($parameters_array['password']);          
                 $client->save(); 
 
-                Mail::to($client->email )->send(new WelcomeMail($client));
+                Mail::to($client->email)->send(new WelcomeMail($client));
 
                 $data = array( 
                     'status'  => 'success',
@@ -64,6 +64,7 @@ class ClientController extends Controller {
             }
 
         }else{
+
             $data = array( 
               'status'  => 'error',
               'code'    =>  400,
@@ -75,9 +76,6 @@ class ClientController extends Controller {
           return response()->json($data, $data['code']);
     }
     
-    /**
-     * Login Req
-     */
     public function login(Request $request){
 
         $json = $request->input('json', null);
@@ -92,7 +90,7 @@ class ClientController extends Controller {
                 "status" => "error", 
                 'code' => 400,
                 "message" => "Credenciales incorrectos." ) );
-        }
+            }
 
         $validate = Validator::make($params_array, [
             'email' => 'required|email',
@@ -124,22 +122,17 @@ class ClientController extends Controller {
             return response()->json($data, $data['code']);
         }
         
-    
-
-
         $client = Client::where('email', $params_object->email)->first();
 
-        $user = Client::findOrFail($client->id);
-    
-        if (!$user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
+        if (!$client->hasVerifiedEmail()) {
+           
+            $client->markEmailAsVerified();
 
             return response( array( 
                 "status" => "error", 
                 'code' => 400,
                 "message" => "Email no verificado, revisar corrreo" ) );
         }
-
 
         if(password_verify($params_object->password, $client->password)){
            
@@ -155,131 +148,161 @@ class ClientController extends Controller {
                 ));
 
         } else {
+            
             return response( array( 
                 "status" => "error", 
                 'code' => 400,
                 "message" => "Credenciales incorrectos." ) );
         }
+
     }
 
     public function logout(Request $request){
         
         if (Auth::user()) {
+            
             $user = Auth::user()->token();
             $user->revoke();
 
-        return response()->json([
-            "status" => "success", 
-            'code' => 200,
-            'message' => 'Cierre de sesion exitoso'
-        ]);
+            return response()->json([
+                "status" => "success", 
+                'code' => 200,
+                'message' => 'Cierre de sesion exitoso'
+            ]);
+
         }else {
+
             return response()->json([
                 "status" => "error", 
                 'code' => 400,
                 'message' => 'ocurrio un error al cerrar sesion'
             ]);
+
         }
     }
 
     public function sendPasswordResetEmail(Request $request){
 
         if(!$this->validEmail($request->email)) {
+            
             return response()->json([
                 "status" => "error", 
                 'code' => 400,
                 'message' => 'El correo electrónico no existe.'
             ], Response::HTTP_NOT_FOUND);
+
         } else {
           
             $this->sendMail($request->email);
+
             return response()->json([
                 "status" => "success", 
                 'code' => 200,
-                'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'
-            ], Response::HTTP_OK);            
+                'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'],
+                 Response::HTTP_OK); 
+
         }
+
     }
 
     public function sendMail($email){
+
         $token = $this->generateToken($email);
         Mail::to($email)->send(new SendMail($token));
+
     }
 
     public function validEmail($email) {
-       return !!Client::where('email', $email)->first();
-    }
 
+       return !!Client::where('email', $email)->first();
+
+    }
+    
     public function generateToken($email){
+
       $isOtherToken = DB::table('password_resets')->where('email', $email)->first();
 
       if($isOtherToken) {
+
         return $isOtherToken->token;
+
       }
 
-      $token = Str::random(80);;
+      $token = Str::random(80);
       $this->storeToken($token, $email);
+
       return $token;
     }
 
     public function storeToken($token, $email){
+        
         DB::table('password_resets')->insert([
             'email' => $email,
             'token' => $token,
             'created_at' => Carbon::now()            
         ]);
+
     }
 
     public function passwordResetProcess(UpdatePasswordRequest $request){
         
         return $this->updatePasswordRow($request)->count() > 0 ? $this->resetPassword($request) : $this->tokenNotFoundError();
-      }
-  
-      // Verify if token is valid
-      private function updatePasswordRow($request){
+        
+    }
+
+    private function updatePasswordRow($request){
+
          return DB::table('password_resets')->where([
-             'email' => $request->email,
+             
+            'email' => $request->email,
              'token' => $request->passwordToken
+
          ]);
-      }
+
+    }
   
-      // Token not found response
-      private function tokenNotFoundError() {
-          return response()->json([
+    private function tokenNotFoundError() {
+         
+        return response()->json([
             "status" => "error", 
             'code' => 400,
             'message' => 'Su correo electrónico o token es incorrecto.'
           ],Response::HTTP_UNPROCESSABLE_ENTITY);
-      }
+          
+    }
   
-      // Reset password
       private function resetPassword($request) {
-          // find email
-          $userData = Client::whereEmail($request->email)->first();
-          // update password
-          $userData->update([
+
+          $clientData = Client::whereEmail($request->email)->first();
+
+          $clientData->update([
             'password'=>bcrypt($request->password)
           ]);
-          // remove verification data from db
+
           $this->updatePasswordRow($request)->delete();
   
-          // reset password response
           return response()->json([
             "status" => "success", 
             'code' => 200,
             'message'=>'Se actualizó la contraseña.'
           ],Response::HTTP_CREATED);
+
       }
 
       public function verify($client_id, Request $request) {
+       
         if (!$request->hasValidSignature()) {
-            return response()->json(["message" => "Se ha proporcionado una URL no válida o caducada."], 401);
+            
+            return response()->json([
+                "status" => "error", 
+                'code' => 400,
+                "message" => "Se ha proporcionado una URL no válida o caducada."]);
         }
     
-        $user = Client::findOrFail($client_id);
+        $client = Client::findOrFail($client_id);
     
-        if (!$user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
+        if (!$client->hasVerifiedEmail()) {
+            $client->markEmailAsVerified();
         }
        
         return response()->json([
@@ -287,17 +310,28 @@ class ClientController extends Controller {
             'code' => 200,
             'message' => 'Cuenta verificada exitosamente'
         ]);
+
     }
     
     public function resend() {
+
         if (auth()->user()->hasVerifiedEmail()) {
-            return response()->json(["message" => "Correo electrónico ya verificado."], 400);
+
+            return response()->json([
+                "status" => "error", 
+                'code' => 400,
+                "message" => "Correo electrónico ya verificado."]);
+
         }
     
         auth()->user()->sendEmailVerificationNotification();
     
-        return response()->json(["message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"]);
-    }
+        return response()->json([
+            "status" => "success", 
+            'code' => 200,
+            "message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"]);
+
+    }   
 
 
     public function clientInfo() {
@@ -305,6 +339,7 @@ class ClientController extends Controller {
      $client = auth()->user();
          
      return response(       
+       
         array( 
             "status" => "success", 
             'code' => 200,
@@ -314,58 +349,12 @@ class ClientController extends Controller {
  
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
+    public function index(){
+       
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
+    public function update(Request $request, Client $client){
+       
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Client  $client
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Client $client)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Client  $client
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Client $client)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Client  $client
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Client $client)
-    {
-        //
-    }
 }

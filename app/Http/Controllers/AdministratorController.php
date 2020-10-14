@@ -137,6 +137,7 @@ class AdministratorController extends Controller{
     public function logout(Request $request){
         
         if (Auth::user()) {
+
             $user = Auth::user()->token();
             $user->revoke();
 
@@ -145,11 +146,14 @@ class AdministratorController extends Controller{
             'code' => 200,
             'message' => 'Cierre de sesion exitoso'
         ]);
+
         }else {
+
             return response()->json([
                 "status" => "error", 
                 'message' => 'ocurrio un error al cerrar sesion'
             ]);
+
         }
     }
 
@@ -158,6 +162,7 @@ class AdministratorController extends Controller{
         $administrator = auth()->user();
 
         return response( 
+           
             array( 
                 "status" => "success", 
                 'code' => 200,
@@ -165,60 +170,19 @@ class AdministratorController extends Controller{
                 "administrator" => $administrator,
                 "token" => $administrator->createToken('Token personal de acceso',['administrator'])->accessToken
             ));
+
     }
     
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
+
+    public function index(){
+
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
+    public function update(Request $request, Administrator $administrator){
+        
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Administrator  $administrator
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Administrator $administrator)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Administrator  $administrator
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Administrator $administrator)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Administrator  $administrator
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Administrator $administrator)
-    {
-        //
+    public function destroy(Administrator $administrator){
+    
     }
 }
