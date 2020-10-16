@@ -16,8 +16,9 @@ class CreateCategoriesTable extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->uuid('administrator_id');
+            $table->tinyIncrements('subCategories_id');
             $table->string('name')->unique();
-            $table->text('description');
+            $table->longText('description');
             $table->timestamps();
 
             $table->foreign('administrator_id')->references('id')->on('administrators');
