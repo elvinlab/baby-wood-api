@@ -30,10 +30,24 @@ class ClientController extends Controller {
 
             $validate = Validator::make($parameters_array, [
                 'name' => 'required|alpha', 
-                'email' => 'required|email|unique:clients',
+                'email' => 'required|email',
                 'password' => 'required|min:6'  
             ]);
 
+            $client = Client::where('email', $parameters_object->email)->first();
+
+            if($client && $client->email === $parameters_object->email){
+
+                return response( array( 
+                        'status'  => 'success',
+                        'code'    =>  201,
+                        'message' => 'Bienvenido de nuevo',
+                        'data'    => $client,
+                        "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
+                    ));
+
+            }
+            
             if($validate -> fails() ){
           
                 $data = array( 
@@ -56,9 +70,9 @@ class ClientController extends Controller {
                 $data = array( 
                     'status'  => 'success',
                     'code'    =>  201,
+                    'message' => 'Bienvenidos a la familia Baby Wood',
                     'data'    => $client,
-                    'message' => 'Cliente registrado.',
-                    'client'  => $client,
+                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
                   ); 
 
             }
