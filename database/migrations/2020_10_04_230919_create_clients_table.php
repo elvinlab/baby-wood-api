@@ -18,6 +18,9 @@ class CreateClientsTable extends Migration
             $table->string('name', 30);
             $table->string('surname', 30);
             $table->string('email') -> unique();
+            $table->string('phone',12);
+            $table->string('celphone',12);
+            $table->longText('address');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role', 20);
