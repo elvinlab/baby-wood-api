@@ -60,4 +60,9 @@ class Administrator extends Authenticatable{
 
         return $this->hasMany('App\Modals\Category');
     }
+
+    public function Promotions(){
+
+        return $this->hasMany('App\Modals\Promotion');
+    }
 }
