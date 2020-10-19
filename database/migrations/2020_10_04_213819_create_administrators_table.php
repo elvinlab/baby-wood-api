@@ -17,9 +17,10 @@ class CreateAdministratorsTable extends Migration
             $table->uuid('id')->primary();
             $table->string('name', 30);
             $table->string('email') -> unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('role', 20);
+            $table->string('cel', 100);
+            $table->string('role', 35);
+            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

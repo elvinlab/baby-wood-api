@@ -23,8 +23,18 @@ class Client extends Authenticatable {
     protected $fillable = [
         'id',
         'name',
+        'surname',
+        'gender',
+        'birth_year',
         'email',
         'password',
+        'cel',
+        'tel',
+        'country',
+        'province',
+        'city',
+        'postal_code',
+        'street_address',
         'role'
     ];
 

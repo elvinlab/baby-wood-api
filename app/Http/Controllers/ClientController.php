@@ -29,9 +29,19 @@ class ClientController extends Controller {
             $parameters_array = array_map('trim', $parameters_array);
 
             $validate = Validator::make($parameters_array, [
-                'name' => 'required|alpha', 
-                'email' => 'required|email',
-                'password' => 'required|min:6'  
+                'name'              => 'required|alpha', 
+                'surname'           => 'required', 
+                'gender'            => 'required|alpha', 
+                'birth_year'        => 'required',
+                'email'             => 'required|email',
+                'password'          => 'required|min:6', 
+                'cel'               => 'required', 
+                'tel'               => 'required', 
+                'country'           => 'required|alpha', 
+                'province'          => 'required|alpha', 
+                'city'              => 'required|alpha', 
+                'postal_code'       => 'required', 
+                'street_address'    => 'required',
             ]);
 
             $client = Client::where('email', $parameters_object->email)->first();
@@ -59,10 +69,21 @@ class ClientController extends Controller {
     
             } else {
                 
-                $client           = new Client();
-                $client->name     = $parameters_array['name'];  
-                $client->email    = $parameters_array['email'];
-                $client->password = bcrypt($parameters_array['password']);          
+                $client                 = new Client();
+                $client->name           = $parameters_array['name']; 
+                $client->surname        = $parameters_array['surname']; 
+                $client->gender         = $parameters_array['gender'];  
+                $client->birth_year     = $parameters_array['birth_year'];   
+                $client->email          = $parameters_array['email'];
+                $client->password       = bcrypt($parameters_array['password']);  
+                $client->cel            = $parameters_array['cel'];  
+                $client->tel            = $parameters_array['tel'];  
+                $client->country        = $parameters_array['country'];  
+                $client->province       = $parameters_array['province'];  
+                $client->city           = $parameters_array['city'];  
+                $client->postal_code    = $parameters_array['postal_code'];        
+                $client->street_address = $parameters_array['street_address'];   
+                $client->role           = 'ROLE_CLIENT'; 
                 $client->save(); 
 
                 Mail::to($client->email)->send(new WelcomeMail($client));
