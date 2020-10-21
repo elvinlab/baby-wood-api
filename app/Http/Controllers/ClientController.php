@@ -14,421 +14,470 @@ use App\Http\Requests\UpdatePasswordRequest;
 use Illuminate\Support\Facades\Mail;
 use Auth;
 
-class ClientController extends Controller {
+class ClientController extends Controller
+{
 
-    public function validateData($parameters_array){
-     
+    public function validateData($parameters_array)
+    {
+
         return Validator::make($parameters_array, [
-            'name'              => 'required|alpha', 
-            'surname'           => 'required', 
-            'gender'            => 'required|alpha', 
+            'name'              => 'required|alpha',
+            'surname'           => 'required',
+            'gender'            => 'required|alpha',
             'birth_year'        => 'required',
             'email'             => 'required|email',
-            'password'          => 'required|min:6', 
-            'cel'               => 'required', 
-            'tel'               => 'required', 
-            'country'           => 'required|alpha', 
-            'province'          => 'required|alpha', 
-            'city'              => 'required|alpha', 
-            'postal_code'       => 'required', 
+            'password'          => 'required|min:6',
+            'cel'               => 'required',
+            'tel'               => 'required',
+            'country'           => 'required',
+            'province'          => 'required',
+            'city'              => 'required',
+            'postal_code'       => 'required',
             'street_address'    => 'required',
         ]);
-        
     }
 
-    public function register(Request $request){
+    public function register(Request $request)
+    {
 
         $json = $request->input('json', null);
 
         $parameters_object = json_decode($json);
         $parameters_array = json_decode($json, true);
 
-        if(!empty($parameters_object) && !empty($parameters_array)){
-            
+        if (!empty($parameters_object) && !empty($parameters_array)) {
+
             $parameters_array = array_map('trim', $parameters_array);
 
-            if( $this-> validateData($parameters_array)->fails() ){ 
-          
-                return response( array( 
-                  'status'  => 'error',
-                  'message' => 'Error al validar los datos.',
-                  'error'   => $this-> validateData($parameters_array)->errors()->first()
-                ), 422);
-    
-            } else if($this->validEmail($parameters_object->email)){
+            if ($this->validateData($parameters_array)->fails()) {
 
-                return response( array( 
+                return response(array(
+                    'status'  => 'error',
+                    'message' => 'Error al validar los datos.',
+                    'error'   => $this->validateData($parameters_array)->errors()->first()
+                ), 422);
+            } else if ($this->validEmail($parameters_object->email)) {
+
+                return response(array(
                     'status'  => 'error',
                     'message' => 'Correo ya registrado',
-                  ), 422);
-
+                ), 422);
             } else {
 
                 $client                 = new Client();
-                $client->name           = $parameters_array['name']; 
-                $client->surname        = $parameters_array['surname']; 
-                $client->gender         = $parameters_array['gender'];  
-                $client->birth_year     = $parameters_array['birth_year'];   
+                $client->name           = $parameters_array['name'];
+                $client->surname        = $parameters_array['surname'];
+                $client->gender         = $parameters_array['gender'];
+                $client->birth_year     = $parameters_array['birth_year'];
                 $client->email          = $parameters_array['email'];
-                $client->password       = bcrypt($parameters_array['password']);  
-                $client->cel            = $parameters_array['cel'];  
-                $client->tel            = $parameters_array['tel'];  
-                $client->country        = $parameters_array['country'];  
-                $client->province       = $parameters_array['province'];  
-                $client->city           = $parameters_array['city'];  
-                $client->postal_code    = $parameters_array['postal_code'];        
-                $client->street_address = $parameters_array['street_address']; 
-                $client->save(); 
+                $client->password       = bcrypt($parameters_array['password']);
+                $client->cel            = $parameters_array['cel'];
+                $client->tel            = $parameters_array['tel'];
+                $client->country        = $parameters_array['country'];
+                $client->province       = $parameters_array['province'];
+                $client->city           = $parameters_array['city'];
+                $client->postal_code    = $parameters_array['postal_code'];
+                $client->street_address = $parameters_array['street_address'];
+                $client->save();
 
-                return response(array( 
+                return response(array(
                     'status'  => 'success',
                     'message' => 'Bienvenidos a la familia Baby Wood',
                     'data'    => $client,
-                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
-                  ), 201);
-
+                    "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken,
+                ), 201);
             }
+        } else {
 
-        }else{
-
-            return response(array( 
-              'status'  => 'error',
-              'message' => 'Error, los datos enviados no son correctos.'
-            ), 400);  
-                          
-          }
-
+            return response(array(
+                'status'  => 'error',
+                'message' => 'Error, los datos enviados no son correctos.'
+            ), 400);
+        }
     }
 
-    public function register_login_fb_google(Request $request){
+    public function register_login_fb_google(Request $request)
+    {
 
         $json = $request->input('json', null);
 
         $parameters_object = json_decode($json);
         $parameters_array = json_decode($json, true);
 
-        if(!empty($parameters_object) && !empty($parameters_array)){
-            
+        if (!empty($parameters_object) && !empty($parameters_array)) {
+
             $parameters_array = array_map('trim', $parameters_array);
 
-            if( $this-> validateData($parameters_array)->fails() ){ 
-          
-                return response( array( 
-                  'status'  => 'error',
-                  'message' => 'Error al validar los datos.',
-                  'error'   => $this-> validateData($parameters_array)->errors()->first()
+            if ($this->validateData($parameters_array)->fails()) {
+
+                return response(array(
+                    'status'  => 'error',
+                    'message' => 'Error al validar los datos.',
+                    'error'   => $this->validateData($parameters_array)->errors()->first()
                 ), 422);
-    
-            } else if($this->validEmail($parameters_object->email)){
+            } else if ($this->validEmail($parameters_object->email)) {
 
-                        
-               $client = Client::where('email', $parameters_object->email)->first();
 
-               $client->markEmailAsVerified();
-
-                return response( array( 
-                    'status'  => 'success',
-                    'message' => 'Es un gusto tenerte de nuevo',
-                    'data'    => $client,
-                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
-                  ), 201);
-
-            } else {
-
-                $client                 = new Client();
-                $client->name           = $parameters_array['name']; 
-                $client->surname        = $parameters_array['surname']; 
-                $client->gender         = $parameters_array['gender'];  
-                $client->birth_year     = $parameters_array['birth_year'];   
-                $client->email          = $parameters_array['email'];
-                $client->password       = bcrypt($parameters_array['password']);  
-                $client->cel            = $parameters_array['cel'];  
-                $client->tel            = $parameters_array['tel'];  
-                $client->country        = $parameters_array['country'];  
-                $client->province       = $parameters_array['province'];  
-                $client->city           = $parameters_array['city'];  
-                $client->postal_code    = $parameters_array['postal_code'];        
-                $client->street_address = $parameters_array['street_address']; 
-                $client->save(); 
+                $client = Client::where('email', $parameters_object->email)->first();
 
                 $client->markEmailAsVerified();
 
-                return response(array( 
+                return response(array(
+                    'status'  => 'success',
+                    'message' => 'Es un gusto tenerte de nuevo',
+                    'data'    => $client,
+                    "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken,
+                ), 201);
+            } else {
+
+                $client                 = new Client();
+                $client->name           = $parameters_array['name'];
+                $client->surname        = $parameters_array['surname'];
+                $client->gender         = $parameters_array['gender'];
+                $client->birth_year     = $parameters_array['birth_year'];
+                $client->email          = $parameters_array['email'];
+                $client->password       = bcrypt($parameters_array['password']);
+                $client->cel            = $parameters_array['cel'];
+                $client->tel            = $parameters_array['tel'];
+                $client->country        = $parameters_array['country'];
+                $client->province       = $parameters_array['province'];
+                $client->city           = $parameters_array['city'];
+                $client->postal_code    = $parameters_array['postal_code'];
+                $client->street_address = $parameters_array['street_address'];
+                $client->save();
+
+                $client->markEmailAsVerified();
+
+                return response(array(
                     'status'  => 'success',
                     'message' => 'Bienvenidos a la familia Baby Wood',
                     'data'    => $client,
-                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
-                  ), 201);
-
+                    "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken,
+                ), 201);
             }
+        } else {
 
-        }else{
-
-            return response(array( 
-              'status'  => 'error',
-              'message' => 'Error, los datos enviados no son correctos.'
-            ), 400);  
-                          
-          }
-
+            return response(array(
+                'status'  => 'error',
+                'message' => 'Error, los datos enviados no son correctos.'
+            ), 400);
+        }
     }
-    
-    public function login(Request $request){
+
+    public function login(Request $request)
+    {
 
         $json = $request->input('json', null);
 
         $params_object = json_decode($json);
         $params_array = json_decode($json, true);
-    
-        if(!empty($parameters_object) && !empty($parameters_array)){
 
-            return response( array( 
-                "status" => "error", 
-                'code' => 400,
-                "message" => "Datos incorrectos." 
-            ), 400);
-        }
+        if (!empty($params_object) && !empty($params_array)) {
 
         $validate = Validator::make($params_array, [
             'email' => 'required|email',
-            'password' => 'required|min:4',
+            'password' => 'required|min:6',
         ]);
 
         if ($validate->fails()) {
-            
-            return response( array(
+
+            return response(array(
                 'status' => 'error',
                 'message' => 'El cliente no se ha podido identificar',
                 'errors' => $validate->errors()
             ), 404);
-            
         }
 
-        if(Client::where('email', $params_object->email)->count() <= 0 ) {
+        if (Client::where('email', $params_object->email)->count() <= 0) {
 
-            return response(  array(
+            return response(array(
                 'status' => 'error',
                 "message" => "Cliente no existe",
             ), 404);
-
         }
-        
+
         $client = Client::where('email', $params_object->email)->first();
 
         if (!$client->hasVerifiedEmail()) {
-           
+
             $client->sendEmailVerificationNotification();
-            
-            return response( array( 
-                "status" => "error", 
-                "message" => "Email no verificado, revisar corrreo" 
+
+            return response(array(
+                "status" => "error",
+                "message" => "Email no verificado, revisar corrreo"
             ), 400);
         }
 
-        if(password_verify($params_object->password, $client->password)){
-           
-            return response(array( 
-                    "status" => "success", 
-                    "message" => "Acceso exitoso",
-                    "client" => $client,
-                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken
+        if (password_verify($params_object->password, $client->password)) {
+
+            return response(array(
+                "status" => "success",
+                "message" => "Acceso exitoso",
+                "client" => $client,
+                "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken
             ), 200);
-
         } else {
-            
-            return response( array( 
-                "status" => "error", 
-                "message" => "Credenciales incorrectos." 
+
+            return response(array(
+                "status" => "error",
+                "message" => "Credenciales incorrectos."
             ), 400);
         }
+    } else {
+
+        return response(array(
+            'status'  => 'error',
+            'message' => 'Error, los datos enviados no son correctos.'
+        ), 400);
+    }
 
     }
 
-    public function logout(){
-        
+    public function logout()
+    {
+
         if (Auth::user()) {
-            
+
             $user = Auth::user()->token();
             $user->revoke();
 
-              
-            return response(array( 
-                "status" => "success", 
+
+            return response(array(
+                "status" => "success",
                 "message" => "Hasta la proxima",
             ), 200);
+        } else {
 
-        }else {
-
-            return response( array( 
-                "status" => "error", 
-                "message" => "Ocurrio un error al cerrar sesion" 
+            return response(array(
+                "status" => "error",
+                "message" => "Ocurrio un error al cerrar sesion"
             ), 400);
-
         }
     }
 
-    public function sendPasswordResetEmail(Request $request){
+    public function sendPasswordResetEmail(Request $request)
+    {
 
-        if(!$this->validEmail($request->email)) {
-            
+        if (!$this->validEmail($request->email)) {
+
             return response()->json([
-                "status" => "error", 
+                "status" => "error",
                 'message' => 'El correo electrónico no existe.'
             ], Response::HTTP_NOT_FOUND);
-
         } else {
-          
+
             $this->sendMail($request->email);
 
-            return response()->json([
-                "status" => "success", 
-                'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'],
-                 Response::HTTP_OK); 
-
+            return response()->json(
+                [
+                    "status" => "success",
+                    'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'
+                ],
+                Response::HTTP_OK
+            );
         }
-
     }
 
-    public function sendMail($email){
+    public function sendMail($email)
+    {
 
         $token = $this->generateToken($email);
         Mail::to($email)->send(new SendMail($token));
-
     }
 
-    public function validEmail($email) {
+    public function validEmail($email)
+    {
 
-       return !!Client::where('email', $email)->first();
-
-    }
-    
-    public function generateToken($email){
-
-      $isOtherToken = DB::table('password_resets')->where('email', $email)->first();
-
-      if($isOtherToken) {
-
-        return $isOtherToken->token;
-
-      }
-
-      $token = Str::random(80);
-      $this->storeToken($token, $email);
-
-      return $token;
+        return !!Client::where('email', $email)->first();
     }
 
-    public function storeToken($token, $email){
-        
+    public function generateToken($email)
+    {
+
+        $isOtherToken = DB::table('password_resets')->where('email', $email)->first();
+
+        if ($isOtherToken) {
+
+            return $isOtherToken->token;
+        }
+
+        $token = Str::random(80);
+        $this->storeToken($token, $email);
+
+        return $token;
+    }
+
+    public function storeToken($token, $email)
+    {
+
         DB::table('password_resets')->insert([
             'email' => $email,
             'token' => $token,
-            'created_at' => Carbon::now()            
+            'created_at' => Carbon::now()
         ]);
-
     }
 
-    public function passwordResetProcess(UpdatePasswordRequest $request){
-        
+    public function passwordResetProcess(UpdatePasswordRequest $request)
+    {
+
         return $this->updatePasswordRow($request)->count() > 0 ? $this->resetPassword($request) : $this->tokenNotFoundError();
-        
     }
 
-    private function updatePasswordRow($request){
+    private function updatePasswordRow($request)
+    {
 
-         return DB::table('password_resets')->where([
-             
+        return DB::table('password_resets')->where([
+
             'email' => $request->email,
             'token' => $request->passwordToken
 
-         ]);
-
+        ]);
     }
-  
-    private function tokenNotFoundError() {
-         
+
+    private function tokenNotFoundError()
+    {
+
         return response()->json([
-            "status" => "error", 
+            "status" => "error",
             'message' => 'Su correo electrónico o token es incorrecto.'
-          ],Response::HTTP_UNPROCESSABLE_ENTITY);
-          
+        ], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
-  
-      private function resetPassword($request) {
 
-          $clientData = Client::whereEmail($request->email)->first();
+    private function resetPassword($request)
+    {
 
-          $clientData->update([
-            'password'=>bcrypt($request->password)
-          ]);
+        $clientData = Client::whereEmail($request->email)->first();
 
-          $this->updatePasswordRow($request)->delete();
-  
-          return response()->json([
-            "status" => "success", 
-            'message'=>'Se actualizó la contraseña.'
-          ],Response::HTTP_CREATED);
+        $clientData->update([
+            'password' => bcrypt($request->password)
+        ]);
 
-      }
+        $this->updatePasswordRow($request)->delete();
 
-      public function verify($client_id, Request $request) {
-       
+        return response()->json([
+            "status" => "success",
+            'message' => 'Se actualizó la contraseña.'
+        ], Response::HTTP_CREATED);
+    }
+
+    public function verify($client_id, Request $request)
+    {
+
         if (!$request->hasValidSignature()) {
-            
+
             return response()->json([
-                "status" => "error", 
+                "status" => "error",
                 "message" => "Se ha proporcionado una URL no válida o caducada."
             ], 400);
         }
-    
+
         $client = Client::findOrFail($client_id);
-    
+
         if (!$client->hasVerifiedEmail()) {
             $client->markEmailAsVerified();
         }
-       
+
         return view('verifyMail');
     }
-    
-    public function resend() {
+
+    public function resend()
+    {
 
         if (auth()->user()->hasVerifiedEmail()) {
 
             return response()->json([
-                "status" => "error", 
+                "status" => "error",
                 "message" => "Correo electrónico ya verificado."
             ], 400);
-
         }
-    
+
         auth()->user()->sendEmailVerificationNotification();
-    
+
         return response()->json([
-            "status" => "success", 
+            "status" => "success",
             "message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"
         ], 200);
+    }
 
-    }   
 
+    public function clientInfo()
+    {
 
-    public function clientInfo() {
- 
-     $client = auth()->user();
-         
-     return response( array( 
-            "status" => "success", 
+        $client = auth()->user();
+
+        return response(array(
+            "status" => "success",
             "message" => "Informacion de cliente",
             "client" => $client,
         ), 200);
- 
     }
 
-    public function index(){
-       
+    public function index()
+    {
     }
 
-    public function update(Request $request, Client $client){
-       
-    }
+    public function update(Request $request, Client $client)
+    {
 
+        $json = $request->input('json', null);
+
+        $parameters_object = json_decode($json);
+        $parameters_array = json_decode($json, true);
+
+        $client = auth()->user();
+
+        if (!empty($parameters_object) && !empty($parameters_array)) {
+
+            $parameters_array = array_map('trim', $parameters_array);
+
+            $validate = Validator::make($parameters_array, [
+                'name'              => 'required|alpha',
+                'surname'           => 'required',
+                'gender'            => 'required|alpha',
+                'birth_year'        => 'required',
+                'email'             => 'required|unique:clients,email,'.$client->id,
+                'password'          => 'required|min:6',
+                'cel'               => 'required',
+                'tel'               => 'required',
+                'country'           => 'required',
+                'province'          => 'required',
+                'city'              => 'required',
+                'postal_code'       => 'required',
+                'street_address'    => 'required',
+            ]);
+
+            if ($validate->fails()) {
+
+                return response(array(
+                    'status'  => 'error',
+                    'message' => 'Error al validar los datos.',
+                    'error'   => $validate->errors()->first()
+                ), 422);
+            } else {
+
+                unset($parameters_array['id']);
+                unset($parameters_array['role']);
+                unset($parameters_array['created_at']);
+                unset($parameters_array['remember_token']);
+                
+                $parameters_array['password'] =  bcrypt($parameters_array['password']);
+
+                $client_update = Client::where('id', $client->id)->update($parameters_array);
+
+                return response(array(
+                    'status'  => 'success',
+                    'message' => 'Datos actualizados correctamente',
+                    'data'    => $client_update,
+                ), 201);
+            }
+
+        } else {
+
+            return response(array(
+                'status'  => 'error',
+                'message' => 'Error, los datos enviados no son correctos.'
+            ), 400);
+        }
+
+    }
 }

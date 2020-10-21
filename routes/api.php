@@ -56,9 +56,10 @@ Route::group(['prefix' => 'store'],function(){
         Route::get('email/resend', [ClientController::class, 'resend'])->name('verification.resend');
 
             Route::group( ['middleware' => ['auth:client']], function(){
-            
+
                 Route::get('logout', [ClientController::class, 'logout']);
                 Route::get('get-client', [ClientController::class, 'clientInfo']);
+                Route::put('update', [ClientController::class, 'update']);
 
             });
     });
