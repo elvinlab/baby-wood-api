@@ -8,19 +8,11 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
 
-    <title>Hello, world!</title>
+    <title>Gracias!</title>
   </head>
-  <body>
-  <h2>Hola {{$data['name']}}, Te damos la bienvenida a nuestra familia Baby Wood, los detalles de tu cuenta son: <br>
-
-  <h3>Email: </h3><p>{{$data['email']}}</p>
-  <h3>Nombre: </h3><p>{{$data['name']}}</p>
-  <h3>Apellido: </h3><p>{{$data['surname']}}</p>
-  <h3>Telefono: </h3><p>{{$data['cel']}}</p>
-
-Gracias,<br>
-{{ config('app.name') }}
-
+  <body class="container">
+    <h1>Email verificado puedes volver a nuestra tienda</h1>
+<a class="btn btn-success" href="http://localhost:4200/">Tienda</a>
     <!-- Optional JavaScript; choose one of the two! -->
 
     <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->

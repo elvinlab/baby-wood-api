@@ -48,6 +48,7 @@ Route::group(['prefix' => 'store'],function(){
     Route::group(['prefix' => 'client'],function(){
 
         Route::post('register', [ClientController::class, 'register']);
+        Route::post('register-fb-google', [ClientController::class, 'register_login_fb_google']);
         Route::post('login', [ ClientController::class, 'login']);   
         Route::post('reset-password-request', [ClientController::class, 'sendPasswordResetEmail']);
         Route::post('change-password', [ClientController::class, 'passwordResetProcess']);

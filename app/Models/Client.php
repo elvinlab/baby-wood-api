@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 use Uuid;
 
 class Client extends Authenticatable {
@@ -64,6 +66,7 @@ class Client extends Authenticatable {
             $model->id = (string) Uuid::generate(4);
             $model->role = 'ROLE_CLIENT';   
             $model->sendEmailVerificationNotification();
+            Mail::to($model->email)->send(new WelcomeMail($model));
         });
     }
 }

@@ -6,16 +6,35 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\SendMail;
-use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\UpdatePasswordRequest;
-use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 use Auth;
 
 class ClientController extends Controller {
+
+    public function validateData($parameters_array){
+     
+        return Validator::make($parameters_array, [
+            'name'              => 'required|alpha', 
+            'surname'           => 'required', 
+            'gender'            => 'required|alpha', 
+            'birth_year'        => 'required',
+            'email'             => 'required|email',
+            'password'          => 'required|min:6', 
+            'cel'               => 'required', 
+            'tel'               => 'required', 
+            'country'           => 'required|alpha', 
+            'province'          => 'required|alpha', 
+            'city'              => 'required|alpha', 
+            'postal_code'       => 'required', 
+            'street_address'    => 'required',
+        ]);
+        
+    }
 
     public function register(Request $request){
 
@@ -28,47 +47,23 @@ class ClientController extends Controller {
             
             $parameters_array = array_map('trim', $parameters_array);
 
-            $validate = Validator::make($parameters_array, [
-                'name'              => 'required|alpha', 
-                'surname'           => 'required', 
-                'gender'            => 'required|alpha', 
-                'birth_year'        => 'required',
-                'email'             => 'required|email',
-                'password'          => 'required|min:6', 
-                'cel'               => 'required', 
-                'tel'               => 'required', 
-                'country'           => 'required|alpha', 
-                'province'          => 'required|alpha', 
-                'city'              => 'required|alpha', 
-                'postal_code'       => 'required', 
-                'street_address'    => 'required',
-            ]);
-
-            $client = Client::where('email', $parameters_object->email)->first();
-
-            if($client && $client->email === $parameters_object->email){
+            if( $this-> validateData($parameters_array)->fails() ){ 
+          
+                return response( array( 
+                  'status'  => 'error',
+                  'message' => 'Error al validar los datos.',
+                  'error'   => $this-> validateData($parameters_array)->errors()->first()
+                ), 422);
+    
+            } else if($this->validEmail($parameters_object->email)){
 
                 return response( array( 
-                        'status'  => 'success',
-                        'code'    =>  201,
-                        'message' => 'Bienvenido de nuevo',
-                        'data'    => $client,
-                        "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
-                    ));
+                    'status'  => 'error',
+                    'message' => 'Correo ya registrado',
+                  ), 422);
 
-            }
-            
-            if($validate -> fails() ){
-          
-                $data = array( 
-                  'status'  => 'error',
-                  'code'    =>  422,
-                  'message' => 'Error al validar los datos.',
-                  'error'   => $validate->errors()->first()
-                );
-    
             } else {
-                
+
                 $client                 = new Client();
                 $client->name           = $parameters_array['name']; 
                 $client->surname        = $parameters_array['surname']; 
@@ -82,33 +77,100 @@ class ClientController extends Controller {
                 $client->province       = $parameters_array['province'];  
                 $client->city           = $parameters_array['city'];  
                 $client->postal_code    = $parameters_array['postal_code'];        
-                $client->street_address = $parameters_array['street_address'];   
-                $client->role           = 'ROLE_CLIENT'; 
+                $client->street_address = $parameters_array['street_address']; 
                 $client->save(); 
 
-                Mail::to($client->email)->send(new WelcomeMail($client));
-
-                $data = array( 
+                return response(array( 
                     'status'  => 'success',
-                    'code'    =>  201,
                     'message' => 'Bienvenidos a la familia Baby Wood',
                     'data'    => $client,
                     "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
-                  ); 
+                  ), 201);
 
             }
 
         }else{
 
-            $data = array( 
+            return response(array( 
               'status'  => 'error',
-              'code'    =>  400,
               'message' => 'Error, los datos enviados no son correctos.'
-            );  
+            ), 400);  
                           
           }
 
-          return response()->json($data, $data['code']);
+    }
+
+    public function register_login_fb_google(Request $request){
+
+        $json = $request->input('json', null);
+
+        $parameters_object = json_decode($json);
+        $parameters_array = json_decode($json, true);
+
+        if(!empty($parameters_object) && !empty($parameters_array)){
+            
+            $parameters_array = array_map('trim', $parameters_array);
+
+            if( $this-> validateData($parameters_array)->fails() ){ 
+          
+                return response( array( 
+                  'status'  => 'error',
+                  'message' => 'Error al validar los datos.',
+                  'error'   => $this-> validateData($parameters_array)->errors()->first()
+                ), 422);
+    
+            } else if($this->validEmail($parameters_object->email)){
+
+                        
+               $client = Client::where('email', $parameters_object->email)->first();
+
+               $client->markEmailAsVerified();
+
+                return response( array( 
+                    'status'  => 'success',
+                    'message' => 'Es un gusto tenerte de nuevo',
+                    'data'    => $client,
+                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
+                  ), 201);
+
+            } else {
+
+                $client                 = new Client();
+                $client->name           = $parameters_array['name']; 
+                $client->surname        = $parameters_array['surname']; 
+                $client->gender         = $parameters_array['gender'];  
+                $client->birth_year     = $parameters_array['birth_year'];   
+                $client->email          = $parameters_array['email'];
+                $client->password       = bcrypt($parameters_array['password']);  
+                $client->cel            = $parameters_array['cel'];  
+                $client->tel            = $parameters_array['tel'];  
+                $client->country        = $parameters_array['country'];  
+                $client->province       = $parameters_array['province'];  
+                $client->city           = $parameters_array['city'];  
+                $client->postal_code    = $parameters_array['postal_code'];        
+                $client->street_address = $parameters_array['street_address']; 
+                $client->save(); 
+
+                $client->markEmailAsVerified();
+
+                return response(array( 
+                    'status'  => 'success',
+                    'message' => 'Bienvenidos a la familia Baby Wood',
+                    'data'    => $client,
+                    "token" => $client->createToken('Token personal de acceso',['client'])->accessToken,
+                  ), 201);
+
+            }
+
+        }else{
+
+            return response(array( 
+              'status'  => 'error',
+              'message' => 'Error, los datos enviados no son correctos.'
+            ), 400);  
+                          
+          }
+
     }
     
     public function login(Request $request){
@@ -117,15 +179,15 @@ class ClientController extends Controller {
 
         $params_object = json_decode($json);
         $params_array = json_decode($json, true);
-
-       
+    
         if(!empty($parameters_object) && !empty($parameters_array)){
 
             return response( array( 
                 "status" => "error", 
                 'code' => 400,
-                "message" => "Credenciales incorrectos." ) );
-            }
+                "message" => "Datos incorrectos." 
+            ), 400);
+        }
 
         $validate = Validator::make($params_array, [
             'email' => 'required|email',
@@ -134,60 +196,50 @@ class ClientController extends Controller {
 
         if ($validate->fails()) {
             
-            $data = array(
+            return response( array(
                 'status' => 'error',
-                'code' => 404,
                 'message' => 'El cliente no se ha podido identificar',
                 'errors' => $validate->errors()
-            );
-
-            return response()->json($data, $data['code']);
-
+            ), 404);
+            
         }
 
         if(Client::where('email', $params_object->email)->count() <= 0 ) {
 
-            $data = array(
+            return response(  array(
                 'status' => 'error',
-                'code' => 404,
                 "message" => "Cliente no existe",
-                'errors' => $validate->errors()
-            );
-            
-            return response()->json($data, $data['code']);
+            ), 404);
+
         }
         
         $client = Client::where('email', $params_object->email)->first();
 
         if (!$client->hasVerifiedEmail()) {
            
-            $client->markEmailAsVerified();
-
+            $client->sendEmailVerificationNotification();
+            
             return response( array( 
                 "status" => "error", 
-                'code' => 400,
-                "message" => "Email no verificado, revisar corrreo" ) );
+                "message" => "Email no verificado, revisar corrreo" 
+            ), 400);
         }
 
         if(password_verify($params_object->password, $client->password)){
            
-            return response( 
-                
-                array( 
+            return response(array( 
                     "status" => "success", 
-                    'code' => 200,
                     "message" => "Acceso exitoso",
                     "client" => $client,
                     "token" => $client->createToken('Token personal de acceso',['client'])->accessToken
-            
-                ));
+            ), 200);
 
         } else {
             
             return response( array( 
                 "status" => "error", 
-                'code' => 400,
-                "message" => "Credenciales incorrectos." ) );
+                "message" => "Credenciales incorrectos." 
+            ), 400);
         }
 
     }
@@ -199,19 +251,18 @@ class ClientController extends Controller {
             $user = Auth::user()->token();
             $user->revoke();
 
-            return response()->json([
+              
+            return response(array( 
                 "status" => "success", 
-                'code' => 200,
-                'message' => 'Cierre de sesion exitoso'
-            ]);
+                "message" => "Hasta la proxima",
+            ), 200);
 
         }else {
 
-            return response()->json([
+            return response( array( 
                 "status" => "error", 
-                'code' => 400,
-                'message' => 'ocurrio un error al cerrar sesion'
-            ]);
+                "message" => "Ocurrio un error al cerrar sesion" 
+            ), 400);
 
         }
     }
@@ -222,7 +273,6 @@ class ClientController extends Controller {
             
             return response()->json([
                 "status" => "error", 
-                'code' => 400,
                 'message' => 'El correo electrónico no existe.'
             ], Response::HTTP_NOT_FOUND);
 
@@ -232,7 +282,6 @@ class ClientController extends Controller {
 
             return response()->json([
                 "status" => "success", 
-                'code' => 200,
                 'message' => 'Revise su bandeja de entrada, hemos enviado un enlace para restablecer el correo electrónico.'],
                  Response::HTTP_OK); 
 
@@ -290,7 +339,7 @@ class ClientController extends Controller {
          return DB::table('password_resets')->where([
              
             'email' => $request->email,
-             'token' => $request->passwordToken
+            'token' => $request->passwordToken
 
          ]);
 
@@ -300,7 +349,6 @@ class ClientController extends Controller {
          
         return response()->json([
             "status" => "error", 
-            'code' => 400,
             'message' => 'Su correo electrónico o token es incorrecto.'
           ],Response::HTTP_UNPROCESSABLE_ENTITY);
           
@@ -318,7 +366,6 @@ class ClientController extends Controller {
   
           return response()->json([
             "status" => "success", 
-            'code' => 200,
             'message'=>'Se actualizó la contraseña.'
           ],Response::HTTP_CREATED);
 
@@ -330,8 +377,8 @@ class ClientController extends Controller {
             
             return response()->json([
                 "status" => "error", 
-                'code' => 400,
-                "message" => "Se ha proporcionado una URL no válida o caducada."]);
+                "message" => "Se ha proporcionado una URL no válida o caducada."
+            ], 400);
         }
     
         $client = Client::findOrFail($client_id);
@@ -340,12 +387,7 @@ class ClientController extends Controller {
             $client->markEmailAsVerified();
         }
        
-        return response()->json([
-            "status" => "success", 
-            'code' => 200,
-            'message' => 'Cuenta verificada exitosamente'
-        ]);
-
+        return view('verifyMail');
     }
     
     public function resend() {
@@ -354,8 +396,8 @@ class ClientController extends Controller {
 
             return response()->json([
                 "status" => "error", 
-                'code' => 400,
-                "message" => "Correo electrónico ya verificado."]);
+                "message" => "Correo electrónico ya verificado."
+            ], 400);
 
         }
     
@@ -363,8 +405,8 @@ class ClientController extends Controller {
     
         return response()->json([
             "status" => "success", 
-            'code' => 200,
-            "message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"]);
+            "message" => "Enlace de verificación de correo electrónico enviado en su identificación de correo electrónico"
+        ], 200);
 
     }   
 
@@ -373,14 +415,11 @@ class ClientController extends Controller {
  
      $client = auth()->user();
          
-     return response(       
-       
-        array( 
+     return response( array( 
             "status" => "success", 
-            'code' => 200,
             "message" => "Informacion de cliente",
             "client" => $client,
-        ));
+        ), 200);
  
     }
 
