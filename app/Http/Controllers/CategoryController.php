@@ -72,7 +72,6 @@ class CategoryController extends Controller
 
                   }
 
-            
           } else {
               $data = [
                   'code' => 400,
