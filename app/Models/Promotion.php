@@ -9,7 +9,9 @@ class Promotion extends Model
 {
     use HasFactory;
 
-    public function administrator() {
-        return $this->belongsTo('App\Modals\Administrator');
-    }
+    protected $table = 'promotions';
+
+    protected $fillable = [
+         'id','tittle','description','coupon','image','amount','max','discount','expiry',
+    ];
 }

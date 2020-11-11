@@ -15,14 +15,15 @@ class CreatePromotionsTable extends Migration
     {
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
-            $table->integer('max');
-            $table->date('expiry');
-            $table->text('description');
+            $table->string('tittle');
+            $table->longText('description');
+            $table->string('coupon')->unique();
             $table->string('image')->nullable();
-            $table->integer('discount')->nullable();
+            $table->integer('amount');
+            $table->integer('max');
+            $table->float('discount', 8, 2);
+            $table->date('expiry');
             $table->timestamps();
-
-           /* $table->foreign('product_id')->references('id')->on('products'); */
         });
     }
 

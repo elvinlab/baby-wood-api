@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PromotionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,8 @@ Route::group(['prefix' => 'store'],function(){
 
 
     Route::resource('category', CategoryController::class);
-    
+    Route::resource('promotion', PromotionController::class);
+
     Route::group(['prefix' => 'administrator'],function(){
 
 
