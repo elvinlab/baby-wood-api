@@ -23,11 +23,6 @@ class CreateClientsTable extends Migration
             $table->string('password');
             $table->string('cel', 100);
             $table->string('tel', 100)->nullable();
-            $table->string('country', 100);
-            $table->string('province', 100);
-            $table->string('city', 100);
-            $table->string('postal_code', 100);
-            $table->text('street_address');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('role', 30);
             $table->rememberToken();

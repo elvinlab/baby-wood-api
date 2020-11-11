@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Administrator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 
 class AdministratorController extends Controller{
 
@@ -17,67 +17,67 @@ class AdministratorController extends Controller{
         $parameters_array = json_decode($json, true);
 
         if(!empty($parameters_object) && !empty($parameters_array)){
-            
+
             $parameters_array = array_map('trim', $parameters_array);
 
             $validate = Validator::make($parameters_array, [
-                'name' => 'required|alpha', 
+                'name' => 'required|alpha',
                 'email' => 'required|email|unique:administrators',
-                'password' => 'required|min:6'  
+                'password' => 'required|min:6'
             ]);
 
             if($validate -> fails() ){
-          
-                $data = array( 
+
+                $data = array(
                   'status'  => 'error',
                   'code'    =>  422,
                   'message' => 'Error al validar los datos.',
                   'error'   => $validate->errors()->first()
                 );
-    
-            } else {
-                
-                $administrator           = new Administrator();
-                $administrator->name     = $parameters_array['name'];  
-                $administrator->email    = $parameters_array['email'];
-                $administrator->password = bcrypt($parameters_array['password']);         
-                $administrator->save(); 
 
-                $data = array( 
+            } else {
+
+                $administrator           = new Administrator();
+                $administrator->name     = $parameters_array['name'];
+                $administrator->email    = $parameters_array['email'];
+                $administrator->password = bcrypt($parameters_array['password']);
+                $administrator->save();
+
+                $data = array(
                     'status'  => 'success',
                     'code'    =>  201,
                     'data'    => $administrator,
                     'message' => 'Cliente registrado.',
-                  ); 
+                  );
 
             }
 
         }else{
-            $data = array( 
+            $data = array(
               'status'  => 'error',
               'code'    =>  400,
               'message' => 'Error, los datos enviados no son correctos.'
-            );  
-                          
+            );
+
           }
 
           return response()->json($data, $data['code']);
     }
-    
+
     /**
      * Login Req
      */
     public function login(Request $request){
 
         $json = $request->input('json', null);
-        
+
         $params_object = json_decode($json);
         $params_array = json_decode($json, true);
 
         if(!empty($parameters_object) && !empty($parameters_array)){
 
-            return response( array( 
-                "status" => "error", 
+            return response( array(
+                "status" => "error",
                 'code' => 400,
                 "message" => "Credenciales incorrectos." ) );
         }
@@ -88,7 +88,7 @@ class AdministratorController extends Controller{
         ]);
 
         if ($validate->fails()) {
-            
+
             $data = array(
                 'status' => 'error',
                 'code' => 404,
@@ -101,14 +101,14 @@ class AdministratorController extends Controller{
         }
 
         if(Administrator::where('email', $params_object->email)->count() <= 0 ){
-            
+
             $data = array(
                 'status' => 'error',
                 'code' => 404,
                 "message" => "Administador no existe" ,
                 'errors' => $validate->errors()
             );
-            
+
             return response()->json($data, $data['code']);
 
         }
@@ -116,10 +116,10 @@ class AdministratorController extends Controller{
         $administrator = Administrator::where('email', $params_object->email)->first();
 
         if(password_verify($params_object->password, $administrator->password)){
-           
-            return response( 
-                array( 
-                    "status" => "success", 
+
+            return response(
+                array(
+                    "status" => "success",
                     'code' => 200,
                     "message" => "Inicio de sesion exitoso.",
                     "administrator" => $administrator,
@@ -127,22 +127,22 @@ class AdministratorController extends Controller{
                 ));
 
         } else {
-            return response( array( 
-                "status" => "error", 
+            return response( array(
+                "status" => "error",
                 'code' => 400,
                 "message" => "Credenciales incorrectos." ) );
         }
     }
 
     public function logout(Request $request){
-        
+
         if (Auth::user()) {
 
             $user = Auth::user()->token();
             $user->revoke();
 
         return response()->json([
-            "status" => "success", 
+            "status" => "success",
             'code' => 200,
             'message' => 'Cierre de sesion exitoso'
         ]);
@@ -150,7 +150,7 @@ class AdministratorController extends Controller{
         }else {
 
             return response()->json([
-                "status" => "error", 
+                "status" => "error",
                 'message' => 'ocurrio un error al cerrar sesion'
             ]);
 
@@ -158,13 +158,13 @@ class AdministratorController extends Controller{
     }
 
     public function adminInfo() {
- 
+
         $administrator = auth()->user();
 
-        return response( 
-           
-            array( 
-                "status" => "success", 
+        return response(
+
+            array(
+                "status" => "success",
                 'code' => 200,
                 "message" => "Informacion de usuario.",
                 "administrator" => $administrator,
@@ -172,17 +172,17 @@ class AdministratorController extends Controller{
             ));
 
     }
-    
+
 
     public function index(){
 
     }
 
     public function update(Request $request, Administrator $administrator){
-        
+
     }
 
     public function destroy(Administrator $administrator){
-    
+
     }
 }

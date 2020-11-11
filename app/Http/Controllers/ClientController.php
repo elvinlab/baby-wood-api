@@ -12,11 +12,10 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Requests\UpdatePasswordRequest;
 use Illuminate\Support\Facades\Mail;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
-
     public function validateData($parameters_array)
     {
 
@@ -28,12 +27,7 @@ class ClientController extends Controller
             'email'             => 'required|email',
             'password'          => 'required|min:6',
             'cel'               => 'required',
-            'tel'               => 'required',
-            'country'           => 'required',
-            'province'          => 'required',
-            'city'              => 'required',
-            'postal_code'       => 'required',
-            'street_address'    => 'required',
+            'tel'               => 'required'
         ]);
     }
 
@@ -73,11 +67,6 @@ class ClientController extends Controller
                 $client->password       = bcrypt($parameters_array['password']);
                 $client->cel            = $parameters_array['cel'];
                 $client->tel            = $parameters_array['tel'];
-                $client->country        = $parameters_array['country'];
-                $client->province       = $parameters_array['province'];
-                $client->city           = $parameters_array['city'];
-                $client->postal_code    = $parameters_array['postal_code'];
-                $client->street_address = $parameters_array['street_address'];
                 $client->save();
 
                 return response(array(
@@ -139,11 +128,6 @@ class ClientController extends Controller
                 $client->password       = bcrypt($parameters_array['password']);
                 $client->cel            = $parameters_array['cel'];
                 $client->tel            = $parameters_array['tel'];
-                $client->country        = $parameters_array['country'];
-                $client->province       = $parameters_array['province'];
-                $client->city           = $parameters_array['city'];
-                $client->postal_code    = $parameters_array['postal_code'];
-                $client->street_address = $parameters_array['street_address'];
                 $client->save();
 
                 $client->markEmailAsVerified();
@@ -174,63 +158,62 @@ class ClientController extends Controller
 
         if (!empty($params_object) && !empty($params_array)) {
 
-        $validate = Validator::make($params_array, [
-            'email' => 'required|email',
-            'password' => 'required|min:6',
-        ]);
+            $validate = Validator::make($params_array, [
+                'email' => 'required|email',
+                'password' => 'required|min:6',
+            ]);
 
-        if ($validate->fails()) {
+            if ($validate->fails()) {
 
-            return response(array(
-                'status' => 'error',
-                'message' => 'El cliente no se ha podido identificar',
-                'errors' => $validate->errors()
-            ), 404);
-        }
+                return response(array(
+                    'status' => 'error',
+                    'message' => 'El cliente no se ha podido identificar',
+                    'errors' => $validate->errors()
+                ), 404);
+            }
 
-        if (Client::where('email', $params_object->email)->count() <= 0) {
+            if (Client::where('email', $params_object->email)->count() <= 0) {
 
-            return response(array(
-                'status' => 'error',
-                "message" => "Cliente no existe",
-            ), 404);
-        }
+                return response(array(
+                    'status' => 'error',
+                    "message" => "Cliente no existe",
+                ), 404);
+            }
 
-        $client = Client::where('email', $params_object->email)->first();
+            $client = Client::where('email', $params_object->email)->first();
 
-        if (!$client->hasVerifiedEmail()) {
+            if (!$client->hasVerifiedEmail()) {
 
-            $client->sendEmailVerificationNotification();
+                $client->sendEmailVerificationNotification();
 
-            return response(array(
-                "status" => "error",
-                "message" => "Email no verificado, revisar corrreo"
-            ), 400);
-        }
+                return response(array(
+                    "status" => "error",
+                    "message" => "Email no verificado, revisar corrreo"
+                ), 400);
+            }
 
-        if (password_verify($params_object->password, $client->password)) {
+            if (password_verify($params_object->password, $client->password)) {
 
-            return response(array(
-                "status" => "success",
-                "message" => "Acceso exitoso",
-                "client" => $client,
-                "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken
-            ), 200);
+                return response(array(
+                    "status" => "success",
+                    "message" => "Acceso exitoso",
+                    "client" => $client,
+                    "token" => $client->createToken('Token personal de acceso', ['client'])->accessToken
+                ), 200);
+            } else {
+
+                return response(array(
+                    "status" => "error",
+                    "message" => "Credenciales incorrectos."
+                ), 400);
+            }
         } else {
 
             return response(array(
-                "status" => "error",
-                "message" => "Credenciales incorrectos."
+                'status'  => 'error',
+                'message' => 'Error, los datos enviados no son correctos.'
             ), 400);
         }
-    } else {
-
-        return response(array(
-            'status'  => 'error',
-            'message' => 'Error, los datos enviados no son correctos.'
-        ), 400);
-    }
-
     }
 
     public function logout()
@@ -391,7 +374,7 @@ class ClientController extends Controller
             ], 400);
         }
 
-        auth()->user()->sendEmailVerificationNotification();
+        auth()->user()->SendEmailVerificationNotification();
 
         return response()->json([
             "status" => "success",
@@ -435,7 +418,7 @@ class ClientController extends Controller
                 'surname'           => 'required',
                 'gender'            => 'required|alpha',
                 'birth_year'        => 'required',
-                'email'             => 'required|unique:clients,email,'.$client->id,
+                'email'             => 'required|unique:clients,email,' . $client->id,
                 'password'          => 'required|min:6',
                 'cel'               => 'required',
                 'tel'               => 'required',
@@ -459,7 +442,7 @@ class ClientController extends Controller
                 unset($parameters_array['role']);
                 unset($parameters_array['created_at']);
                 unset($parameters_array['remember_token']);
-                
+
                 $parameters_array['password'] =  bcrypt($parameters_array['password']);
 
                 $client_update = Client::where('id', $client->id)->update($parameters_array);
@@ -470,7 +453,6 @@ class ClientController extends Controller
                     'data'    => $client_update,
                 ), 201);
             }
-
         } else {
 
             return response(array(
@@ -478,6 +460,5 @@ class ClientController extends Controller
                 'message' => 'Error, los datos enviados no son correctos.'
             ), 400);
         }
-
     }
 }

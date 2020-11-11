@@ -6,6 +6,7 @@ use App\Http\Controllers\AdministratorController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\DirectionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,8 +21,8 @@ use App\Http\Controllers\PromotionController;
 
 Route::get('auth-err',function() {
 
-    return response( array( 
-        "status" => "error", 
+    return response( array(
+        "status" => "error",
         'code' => 400,
         "message" => "Usuario no admitido." ));
 
@@ -36,7 +37,7 @@ Route::group(['prefix' => 'store'],function(){
     Route::group(['prefix' => 'administrator'],function(){
 
 
-    Route::post('login', [ AdministratorController::class, 'login']);         
+    Route::post('login', [ AdministratorController::class, 'login']);
 
         Route::group( ['middleware' => ['auth:administrator']], function(){
 
@@ -51,17 +52,21 @@ Route::group(['prefix' => 'store'],function(){
 
         Route::post('register', [ClientController::class, 'register']);
         Route::post('register-fb-google', [ClientController::class, 'register_login_fb_google']);
-        Route::post('login', [ ClientController::class, 'login']);   
+        Route::post('login', [ ClientController::class, 'login']);
         Route::post('reset-password-request', [ClientController::class, 'sendPasswordResetEmail']);
         Route::post('change-password', [ClientController::class, 'passwordResetProcess']);
         Route::get('email/verify/{id}', [ClientController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
         Route::get('email/resend', [ClientController::class, 'resend'])->name('verification.resend');
 
-            Route::group( ['middleware' => ['auth:client']], function(){
+            Route::group( ['middleware' => ['auth:client' ]], function(){
 
                 Route::get('logout', [ClientController::class, 'logout']);
                 Route::get('get-client', [ClientController::class, 'clientInfo']);
                 Route::put('update', [ClientController::class, 'update']);
+
+                Route::resource('direction', DirectionController::class);
+                Route::get('get-directions/{id}', [DirectionController::class, 'directionsByClient']);
+
 
             });
     });

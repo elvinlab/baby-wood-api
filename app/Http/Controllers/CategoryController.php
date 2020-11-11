@@ -5,115 +5,118 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
-class CategoryController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
+class CategoryController extends Controller {
+
+    public function index() {
+
+        $categories = Category::all();
+
+        return response()->json([
+                'code' => 200,
+                'status' => 'success',
+                'categories' => $categories
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request){
 
-          $json = $request->input('json', null);
-          $params_array = json_decode($json, true);
-  
-          if (!empty($params_array)) {
-  
-              $validate = \Validator::make($params_array, [
-                  'name' => 'required|unique:categories',
-              ]);
-  
-              if ($validate->fails()) {
-                  $data = [
-                      'code' => 400,
-                      'status' => 'error',
-                      'message' => 'No se ha guardado la categoria.',
-                      'error' => $validate->errors()
-                  ];
+        $json = $request->input('json', null);
+        $params_array = json_decode($json, true);
 
-                return response()->json($data, $data['code']);
+        if(!empty($params_array)){
+            $validate = \Validator::make($params_array, [
+                'name' => 'required'
+            ]);
 
-              } 
-                  
-                  $category = new Category();
-                  $category->name = $params_array['name'];
-                  $category->description = $params_array['description'];
-                  $category->save();
-                  
-                  if (auth()->client()->categories()->save($category)){
-                      
-                  $data = [
+            if($validate->fails()){
+                $data = [
+                    'code' => 400,
+                    'status' => 'error',
+                    'message' => 'No se ha guardado la categoria.'
+                ];
+            } else {
+                $category = new Category();
+                $category->name = $params_array['name'];
+                $category->save();
+
+                $data = [
                     'code' => 200,
                     'status' => 'success',
-                    'category' => $params_array
-                    ];
+                    'category' => $category
+                ];
+            }
+        }else{
+            $data = [
+                'code' => 400,
+                'status' => 'error',
+                'message' => 'No has enviado ninguna categoria.'
+            ];
+        }
 
-                    return response()->json($data, $data['code']);
-
-                  }else {
-                    $data = [
-                        'code' => 400,
-                        'status' => 'error',
-                        'message' => 'La categoria no se pudo guardar.'
-                    ];
-
-                    return response()->json($data, $data['code']);
-
-                  }
-
-          } else {
-              $data = [
-                  'code' => 400,
-                  'status' => 'error',
-                  'message' => 'No se enviado ninguna categoria.'
-              ];
-              return response()->json($data, $data['code']);
-          }
-
+        return response()->json($data, $data['code']);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Category $category)
-    {
-        //
+
+    public function show($id) {
+        $category = Category::find($id);
+
+        if (is_object($category)) {
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'category' => $category
+            ];
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'La categoria no existe'
+            ];
+        }
+
+        return response()->json($data, $data['code']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Category $category)
-    {
-        //
+    public function update($id, Request $request){
+
+        $json = $request->input('json', null);
+        $params_array = json_decode($json, true);
+
+        if(!empty($params_array)){
+
+            $validate = \Validator::make($params_array, [
+                'name' => 'required'
+            ]);
+            unset($params_array['id']);
+            unset($params_array['created_at']);
+
+            $category = Category::where('id', $id)->update($params_array);
+
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'category' => $params_array
+            ];
+
+        }else{
+            $data = [
+                    'code' => 400,
+                    'status' => 'error',
+                    'message' => 'No has enviado ninguna categoria.'
+            ];
+        }
+
+        return response()->json($data, $data['code']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Category $category)
+    public function destroy($id)
     {
-        //
+        $category = Direction::where('id', $id)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $category
+        ], 200);
+
     }
 }

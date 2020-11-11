@@ -6,11 +6,9 @@ use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+class PromotionController extends Controller {
 
-class PromotionController extends Controller
-{
-    public function index()
-    {
+    public function index() {
         $promotions = Promotion::all();
 
         $response=array(
@@ -20,35 +18,34 @@ class PromotionController extends Controller
         );
 
         return response()->json($response,200);
-
     }
 
+    public function store(Request $request) {
 
-    public function store(Request $request)
-    {
         $json = $request->input('json',null);
         $params_array = json_decode($json,true);
 
         if(!empty($params_array)){
 
-           $validate = \Validator::make($params_array, [
-                'tittle' => 'required',  
+            $validate = \Validator::make($params_array, [
+                'tittle' => 'required',
                 'description' => 'required',
-                'coupon' => 'required|unique:promotions', 
-                'amount' => 'required', 
+                'coupon' => 'required|unique:promotions',
+                'amount' => 'required',
                 'max' => 'required',
                 'discount' => 'required',
                 'expiry' => 'required',
             ]);
 
             if ($validate->fails()) {
+
                 $data = [
                     'code' => 400,
                     'status' => 'error',
                     'message' => 'No se ha guardado la promocion, faltan datos',
                     'error' => $validate->errors()
                 ];
-                
+
                 return response()->json($data, $data['code']);
             }
 
@@ -64,12 +61,12 @@ class PromotionController extends Controller
                 $promotion->save();
 
                 $data = [
-                      'code' => 200,
-                      'status' => 'success',
-                      'promotion' => $params_array
-                      ];
-  
-                      return response()->json($data, $data['code']);
+                    'code' => 200,
+                    'status' => 'success',
+                    'promotion' => $params_array
+                ];
+
+                return response()->json($data, $data['code']);
 
             } else {
                 $data = [
@@ -77,18 +74,17 @@ class PromotionController extends Controller
                     'status' => 'error',
                     'message' => 'No se ha enviado ninguna promocion.'
                 ];
+
                 return response()->json($data, $data['code']);
             }
-        
-    
+
         }
 
-    public function show($id)
-    {
+    public function show($id){
         $promotion = Promotion::find($id);
 
         if(is_object($promotion)){
-           
+
             $data = [
                 'code'=> 200,
                 'status' => 'success',
@@ -97,98 +93,92 @@ class PromotionController extends Controller
             ];
 
         } else {
+
             $data = [
                 'code'=> 404,
                 'status' => 'error',
                 'message' => 'La promocion no existe',
             ];
+
         }
 
         return response()->json($data,$data['code']);
-      
     }
-    
-    public function update(Request $request, $id)
-    {
+
+    public function update(Request $request, $id) {
+
         $json = $request->input('json',null);
         $params_array = json_decode($json,true);
-        
-
 
         if(!empty($params_array)){
-           
+
             $params_array = array_map('trim', $params_array);
- 
+
             $validate = \Validator::make($params_array, [
-                'tittle' => 'required',  
+                'tittle' => 'required',
                 'description' => 'required',
-                'coupon' => 'required|unique:promotions', 
-                'amount' => 'required', 
+                'coupon' => 'required|unique:promotions',
+                'amount' => 'required',
                 'max' => 'required',
                 'discount' => 'required',
                 'expiry' => 'required',
-
             ]);
+
             if($validate->fails()){
-               $data=[
+
+                $data=[
                     'status' => '400',
                     'message' => 'Error al validar los datos',
                     'error' => $validate->errors()->first()
-               ];
-               
-            } else {
-                unset($params_array['tittle']);
-                unset($params_array['description']);
-                unset($params_array['amount']);
-                unset($params_array['max']);
-                unset($params_array['discount']);
-                unset($params_array['expiry']);
-                $params_array->save();
+                ];
 
-                $promotion_update = Promotion::where('id'.$promotion->id)-update($params_array);
-                
-              $data=[
+            } else {
+
+                unset($params_array['id']);
+                unset($params_array['created_at']);
+
+                $promotion_update = Promotion::where('id'.$id)-update($params_array);
+
+                $data=[
                     'status' => 'succes',
                     'message' =>'Datos actualizados correctamente',
                     'data'=> $promotion_update,
-              ];
-              
+                ];
+
             }
         } else {
-           $data=[
-               'code' => 400,
-               'status' => 'error',
-               'massege' => 'Error, los datos enviados no son correctos.'
-           ];
-          
-    }
-}
 
-
-public function destroy(Request $request, $id)
-    {
-        
-        $json = $request->input('json',null);
-        $params_array = json_decode($json,true);
-        
-        if (!empty($promotion)>0){
-            Promotion::delete('delete from promotion where id=?',[$id]);
-
-            $data =[
-                'code'=>200,
-                'status'=> 'success',
-                'Promotion'=> $promotion
-            ];
-        }else{
             $data=[
-                'code'=> 404,
-                'status'=>'success',
-                'promotion'=>'La promocion no existe'
+                'code' => 400,
+                'status' => 'error',
+                'massege' => 'Error, los datos enviados no son correctos.'
             ];
         }
+
+    }
+
+    public function destroy($id) {
+
+        $promotion = Promotion::where('id', $id)->first();
+
+        if (!empty($promotion)) {
+
+            $promotion->delete();
+
+            $data = [
+                'code' => 200,
+                'status' => 'success',
+                'promotion' => $promotion
+            ];
+        } else {
+            $data = [
+                'code' => 404,
+                'status' => 'error',
+                'message' => 'Promocion no existe'
+            ];
+        }
+
         return response()->json($data, $data['code']);
-        //
-    
-}
+    }
 
 }
