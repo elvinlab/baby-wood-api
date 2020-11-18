@@ -16,6 +16,18 @@ use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
+
+    public function index() {
+
+        $clients = Client::all();
+
+        return response()->json([
+                'code' => 200,
+                'status' => 'success',
+                'clients' => $clients
+        ]);
+    }
+
     public function validateData($parameters_array)
     {
 
@@ -26,8 +38,6 @@ class ClientController extends Controller
             'birth_year'        => 'required',
             'email'             => 'required|email',
             'password'          => 'required|min:6',
-            'cel'               => 'required',
-            'tel'               => 'required'
         ]);
     }
 
@@ -395,10 +405,6 @@ class ClientController extends Controller
         ), 200);
     }
 
-    public function index()
-    {
-    }
-
     public function update(Request $request, Client $client)
     {
 
@@ -420,13 +426,6 @@ class ClientController extends Controller
                 'birth_year'        => 'required',
                 'email'             => 'required|unique:clients,email,' . $client->id,
                 'password'          => 'required|min:6',
-                'cel'               => 'required',
-                'tel'               => 'required',
-                'country'           => 'required',
-                'province'          => 'required',
-                'city'              => 'required',
-                'postal_code'       => 'required',
-                'street_address'    => 'required',
             ]);
 
             if ($validate->fails()) {

@@ -23,7 +23,8 @@ class AdministratorController extends Controller{
             $validate = Validator::make($parameters_array, [
                 'name' => 'required|alpha',
                 'email' => 'required|email|unique:administrators',
-                'password' => 'required|min:6'
+                'password' => 'required|min:6',
+                'cel' => 'required'
             ]);
 
             if($validate -> fails() ){
@@ -41,13 +42,14 @@ class AdministratorController extends Controller{
                 $administrator->name     = $parameters_array['name'];
                 $administrator->email    = $parameters_array['email'];
                 $administrator->password = bcrypt($parameters_array['password']);
+                $administrator->cel = $parameters_array['cel'];
                 $administrator->save();
 
                 $data = array(
                     'status'  => 'success',
                     'code'    =>  201,
                     'data'    => $administrator,
-                    'message' => 'Cliente registrado.',
+                    'message' => 'Administrador registrado.',
                   );
 
             }
@@ -106,7 +108,6 @@ class AdministratorController extends Controller{
                 'status' => 'error',
                 'code' => 404,
                 "message" => "Administador no existe" ,
-                'errors' => $validate->errors()
             );
 
             return response()->json($data, $data['code']);

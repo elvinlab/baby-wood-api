@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\DirectionController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,8 +24,7 @@ Route::get('auth-err',function() {
 
     return response( array(
         "status" => "error",
-        'code' => 400,
-        "message" => "Usuario no admitido." ));
+        "message" => "Usuario no admitido." ), 400);
 
 })->name('auth-err');
 
@@ -33,9 +33,9 @@ Route::group(['prefix' => 'store'],function(){
 
     Route::resource('category', CategoryController::class);
     Route::resource('promotion', PromotionController::class);
+    Route::resource('product', PromotionController::class);
 
     Route::group(['prefix' => 'administrator'],function(){
-
 
     Route::post('login', [ AdministratorController::class, 'login']);
 
@@ -44,6 +44,7 @@ Route::group(['prefix' => 'store'],function(){
                 Route::post('register', [AdministratorController::class, 'register']);
                 Route::get('logout', [AdministratorController::class, 'logout']);
                 Route::get('get-administrator', [AdministratorController::class, 'adminInfo']);
+                Route::get('get-clients', [ClientController::class, 'index']);
 
         });
     });
@@ -66,7 +67,6 @@ Route::group(['prefix' => 'store'],function(){
 
                 Route::resource('direction', DirectionController::class);
                 Route::get('get-directions/{id}', [DirectionController::class, 'directionsByClient']);
-
 
             });
     });
