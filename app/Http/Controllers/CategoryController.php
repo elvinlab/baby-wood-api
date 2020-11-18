@@ -25,18 +25,21 @@ class CategoryController extends Controller {
 
         if(!empty($params_array)){
             $validate = \Validator::make($params_array, [
-                'name' => 'required'
+                'name' => 'required',
+                'description' => 'required'
             ]);
 
             if($validate->fails()){
                 $data = [
                     'code' => 400,
                     'status' => 'error',
-                    'message' => 'No se ha guardado la categoria.'
+                    'message' => 'No se ha guardado la categoria.',
+                    'errors' =>  $validate->errors()
                 ];
             } else {
                 $category = new Category();
                 $category->name = $params_array['name'];
+                $category->description = $params_array['description'];
                 $category->save();
 
                 $data = [

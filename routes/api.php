@@ -31,20 +31,41 @@ Route::get('auth-err',function() {
 Route::group(['prefix' => 'store'],function(){
 
 
-    Route::resource('category', CategoryController::class);
-    Route::resource('promotion', PromotionController::class);
-    Route::resource('product', PromotionController::class);
+    Route::get('all-categories', [CategoryController::class, 'index']);
+    Route::get('show-category',[CategoryController::class, 'show']);
+
+    Route::get('all-promotions', [PromotionController::class, 'index']);
+    Route::get('show-promotion', [PromotionController::class, 'show']);
+
+    Route::get('all-products',[ProductController::class, 'index']);
+    Route::get('product-category',[ProductController::class, 'getProductByCategory']);
 
     Route::group(['prefix' => 'administrator'],function(){
 
     Route::post('login', [ AdministratorController::class, 'login']);
 
+    Route::post('register', [AdministratorController::class, 'register']);
+
         Route::group( ['middleware' => ['auth:administrator']], function(){
 
-                Route::post('register', [AdministratorController::class, 'register']);
+                //Route::post('register', [AdministratorController::class, 'register']);
                 Route::get('logout', [AdministratorController::class, 'logout']);
                 Route::get('get-administrator', [AdministratorController::class, 'adminInfo']);
                 Route::get('get-clients', [ClientController::class, 'index']);
+
+                Route::post('store-product',[ProductController::class, 'store']);
+                Route::post('update-product/{id}',[ProductController::class, 'update']);
+                Route::post('destroy-product',[CategoryController::class, 'destroy']);
+                Route::post('upload-image-product',[CategoryController::class, 'upload']);
+                Route::post('get-image-product',[CategoryController::class, 'getImage']);
+
+                Route::post('store-category',[CategoryController::class, 'store']);
+                Route::post('update-category',[CategoryController::class, 'update']);
+                Route::post('destroy-category',[CategoryController::class, 'destroy']);
+
+                Route::post('store-promotion',[PromotionController::class, 'store']);
+                Route::post('update-promotion',[PromotionController::class, 'update']);
+                Route::post('destroy-promotion',[PromotionController::class, 'destroy']);
 
         });
     });

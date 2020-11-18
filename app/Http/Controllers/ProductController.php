@@ -19,7 +19,7 @@ class ProductController extends Controller
 
     }
 
-    public function store()
+    public function store(Request $request)
     {
         $json = $request->input('json', null);
         $params_array = json_decode($json, true);
@@ -39,16 +39,18 @@ class ProductController extends Controller
                 $data = [
                     'code' => 400,
                     'status' => 'error',
-                    'message' => 'Faltan datos o son invalidos.'
+                    'message' => 'Faltan datos o son invalidos.',
+                    'errors' =>  $validate->errors()
                 ];
             } else {
                 $product = new Product();
-                $product->name = $params_array['categoryId'];
-                $product->name = $params_array['price'];
-                $product->name = $params_array['amount'];
-                $product->name = $params_array['description'];
-                $product->name = $params_array['wood'];
-                $product->name = $params_array['woodFinish'];
+                $product->categoryId = $params_array['categoryId'];
+                $product->name = $params_array['name'];
+                $product->price = $params_array['price'];
+                $product->amount = $params_array['amount'];
+                $product->description = $params_array['description'];
+                $product->wood = $params_array['wood'];
+                $product->woodFinish = $params_array['woodFinish'];
                 $product->save();
 
                 $data = [
@@ -74,7 +76,7 @@ class ProductController extends Controller
 
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request,  $id)
     {
         $json = $request->input('json', null);
         $params_array = json_decode($json, true, JSON_UNESCAPED_UNICODE);
